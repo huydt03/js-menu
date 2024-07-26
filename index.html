@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title></title>
+	<script type="text/javascript">
+		function _$(type, content, attrs){
+		    let target = document.createElement(type || 'div');
+		    target.innerHTML = content || "";
+		    for(let key in attrs){
+		        let value = attrs[key];
+		        target.setAttribute(key, value);
+		    }
+
+		    return target;
+		}
+	</script>
+	<style type="text/css">
+		.menu{
+			display: flex;
+		}
+		.menu-item{
+			display: inline-block;
+			position: relative;
+		}
+		.menu-item label{
+		    margin: 1px;
+		    padding: 4px 8px;
+			cursor: pointer;
+		}
+		.menu > .has-child > ul{
+			left: 0px;
+			top: 100%;
+		}
+		.childs-abs ul{
+			position: absolute;
+		}
+		.has-child > ul{
+			display: none;
+			top: 0px;
+			left: 100%;
+			padding: 0;
+			margin: 0;
+			transition: all .5s;
+		}
+		.has-child:hover > ul{
+			display: block;
+		}
+		.has-child > label{
+			padding-right: 30px !important;
+		}
+		.has-child > label:after{
+			content: '›';
+			position: absolute;
+		    right: 3px;
+		}
+		.has-child:hover > label:after{
+			content: '‹';
+		}
+		.has-child ul label{
+			display: block;
+			min-width: 100px;
+		}
+		.has-child ul label:hover{
+			background: #ccc;
+			color: #fff;
+		}
+	</style>
+</head>
+<body>
+
+	<script type="text/javascript">
+		function MenuV(_items, attrs = {class: 'menu'}){
+			let items = Object.assign({}, _items)
+			let menu_items = {};
+
+			let target = new _$('div', '', attrs);
+
+			for(let i in items){
+				let value = (typeof items[i] == 'object')? items[i]: '';
+				let title = value? i: items[i];
+				let item = new MenuH(value, title, attrs.item);
+				menu_items[i] = item;
+				target.append(item.target);
+			}
+
+			return {target, childs: menu_items};
+		}
+
+		function MenuH(_items, title, attrs = {class: 'menu-item'}){
+
+			let items = _items;
+			if(typeof _items == 'object')
+				items = Object.assign({}, items)
+
+			const TITLE_TAG = 'label';
+			let target = new _$('div', '', attrs);
+			let target_container = new _$('ul');
+			title = items.title || title;
+			delete items.title;
+
+			if(title){
+				let target_title = new _$(TITLE_TAG, title);
+				target.append(target_title);
+			}
+
+			if(items){
+				target.classList.add('has-child');
+				target.append(target_container);
+			}
+
+			function menuItem(text){
+				let specials = ['hr', 'br'];
+				let target = specials.includes(text)? new _$(text): new _$(TITLE_TAG, text);
+				return {target};
+			}
+
+			for(let i in items){
+				if(typeof items[i] == 'object'){
+					items[i] = new MenuH(items[i], i)
+				}
+				else{
+					items[i] = new menuItem(items[i]);
+					// console.log(i, items[i])
+				}
+
+				target_container.append(items[i].target);
+			}
+
+			return {target, childs: items};
+		}
+	</script>
+
+
+	<script type="text/javascript">
+		let target = document.body;
+		
+		let items = {
+			'new': 'New file',
+			'open': 'Open file',
+			'save_as': {
+				title: 'Save As ...',
+				'doc': 'DOC',
+				'pdf': 'PDF',
+				'sub': {title: 'Sub Childs', sub1: 'Sub child 1', sub2: 'Sub child 2'}
+			},
+			'save': 'Save file',
+			'_': 'hr',
+			'exit': 'Exit',
+		}
+
+		let menu = new MenuV(items)
+		let menu2 = new MenuV(items, {class: 'menu childs-abs'})
+
+		let item = new MenuH(items, 'File');
+		let item2 = new MenuH(items, 'File2', {class: 'menu-item childs-abs'});
+
+		target.append(menu.target)
+		target.append(menu.target, menu2.target, item.target, item2.target)
+
+		console.log(menu)
+
+	</script>
+</body>
+</html>
